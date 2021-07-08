@@ -1,23 +1,29 @@
 from flask import Blueprint
-from flask_httpauth import HTTPBasicAuth
+from flask_httpauth import HTTPDigestAuth
 from http import HTTPStatus
 from werkzeug.security import check_password_hash
 
 from app.models.user_model import UserModel
 
+from app.services.users_service import get_user
+
 # -------------------------------------
 
 bp = Blueprint("bp_admin", __name__, url_prefix="/admin")
-auth = HTTPBasicAuth()
+auth = HTTPDigestAuth()
 
 # -------------------------------------
 
 
-@auth.verify_password
-def verify_password(email, password):
-    user: UserModel = UserModel.query.filter_by(email=email).first()
-    if user and check_password_hash(user.password_hash, password):
-        return user.api_key
+@auth.get_password
+def get_password(email):
+
+    user: UserModel = get_user(email)
+    if user:
+        print(email)
+        return user.password_hash
+
+    return None
 
 
 @bp.get("/")

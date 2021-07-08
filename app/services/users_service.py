@@ -19,7 +19,7 @@ def create_user(payload: dict) -> UserModel:
     payload["password_hash"] = generate_password_hash(password)
     payload["api_key"] = secrets.token_urlsafe(32)
 
-    user = UserModel(**payload)
+    user: UserModel = UserModel(**payload)
 
     add_commit(user)
 
@@ -47,3 +47,7 @@ def update_user(payload: dict, user_to_change: UserModel) -> UserModel:
     add_commit(user_to_change)
 
     return user_to_change
+
+
+def get_user(email: str) -> UserModel:
+    return UserModel.query.filter_by(email=email).first()
