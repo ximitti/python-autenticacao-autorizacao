@@ -3,6 +3,10 @@ from flask_migrate import Migrate
 
 # -------------------------------------
 
+mg = Migrate()
+
+# ------------------------------------
+
+
 def init_app(app: Flask):
-    mg = Migrate()
     mg.init_app(app, app.db)

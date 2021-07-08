@@ -13,16 +13,16 @@ env.read_env()
 def create_app() -> Flask:
 
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = env('SQLALCHEMY_DATABASE_URI')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['JSON_SORT_KEYS'] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = env("SQLALCHEMY_DATABASE_URI")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["JSON_SORT_KEYS"] = False
 
     database.init_app(app)
     migrations.init_app(app)
     views.init_app(app)
 
-    @app.get('/')
+    @app.get("/")
     def index():
-        return 'Hello, World!'
+        return "<h1>Acessar /api/signup para se cadastrar</h1>"
 
     return app

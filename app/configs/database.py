@@ -3,10 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 
 # ---------------------------------
 
+db = SQLAlchemy()
+
+# --------------------------------
+
+
 def init_app(app: Flask):
-    db = SQLAlchemy()
+
     db.init_app(app)
     app.db = db
 
-
-    # importar a model aqui
+    from app.models.user_model import UserModel
