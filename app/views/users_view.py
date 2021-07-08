@@ -1,12 +1,14 @@
-from flask import Blueprint, request, render_template, current_app
+from flask import Blueprint, request, render_template
 from flask_httpauth import HTTPTokenAuth
-from werkzeug.security import generate_password_hash
 from http import HTTPStatus
 from sqlalchemy.exc import IntegrityError
-import secrets
 
-from app.services.helpers import add_commit, delete_commit
-from app.services.users_service import create_user, get_user_token, update_user
+from app.services.users_service import (
+    create_user,
+    get_user_token,
+    update_user,
+    delete_user,
+)
 
 from app.models.user_model import UserModel
 
@@ -40,7 +42,7 @@ def form_signup() -> tuple:
 def user_register() -> tuple:
 
     try:
-        user: Model = create_user(dict(request.form))
+        user: UserModel = create_user(dict(request.form))
 
         return (
             render_template("/users/index.html", user=user),
@@ -92,11 +94,9 @@ def update() -> tuple:
 
 @bp.delete("/")
 @auth.login_required
-def delete_user() -> tuple:
+def delete() -> tuple:
 
-    user: UserModel = auth.current_user()
-
-    delete_commit(user)
+    delete_user(auth.current_user())
 
     return (
         "No content",

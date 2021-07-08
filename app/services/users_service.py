@@ -1,9 +1,12 @@
 from app.models.user_model import UserModel
-from flask_sqlalchemy import Model
-from werkzeug.security import generate_password_hash
 import secrets
 
-from .helpers import add_commit, verify_allowed_keys, verify_required_keys
+from .helpers import (
+    add_commit,
+    delete_commit,
+    verify_allowed_keys,
+    verify_required_keys,
+)
 from app.exc import AllowedKeysError, RequiredKeysError
 
 # ----------------------------------------
@@ -15,8 +18,6 @@ def create_user(payload: dict) -> UserModel:
     if blank_fields:
         raise RequiredKeysError(payload, blank_fields)
 
-    password = payload.pop("password")
-    payload["password_hash"] = generate_password_hash(password)
     payload["api_key"] = secrets.token_urlsafe(32)
 
     user: UserModel = UserModel(**payload)
@@ -37,10 +38,6 @@ def update_user(payload: dict, user_to_change: UserModel) -> UserModel:
     if verify_allowed_keys(payload, allowed_keys):
         raise AllowedKeysError(payload, allowed_keys)
 
-    if payload.get("password"):
-        password = payload.pop("password")
-        payload["password_hash"] = generate_password_hash(password)
-
     for key, value in payload.items():
         setattr(user_to_change, key, value)
 
@@ -51,3 +48,7 @@ def update_user(payload: dict, user_to_change: UserModel) -> UserModel:
 
 def get_user(email: str) -> UserModel:
     return UserModel.query.filter_by(email=email).first()
+
+
+def delete_user(user: UserModel) -> None:
+    delete_commit(user)

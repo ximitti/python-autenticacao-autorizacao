@@ -1,7 +1,6 @@
 from flask import Blueprint
 from flask_httpauth import HTTPDigestAuth
 from http import HTTPStatus
-from werkzeug.security import check_password_hash
 
 from app.models.user_model import UserModel
 
@@ -21,18 +20,25 @@ def get_password(email):
     user: UserModel = get_user(email)
     if user:
         print(email)
-        return user.password_hash
+        return user.password
 
     return None
 
 
 @bp.get("/")
 @auth.login_required
-def index():
-    return {"token": auth.current_user()}, HTTPStatus.OK
+def index() -> tuple:
+    user: UserModel = get_user(auth.current_user())
+    return (
+        {"token": user.api_key},
+        HTTPStatus.OK,
+    )
 
 
 @bp.get("/logout")
 @auth.login_required
-def logout():
-    return "<h1>Deslogado</h1>", HTTPStatus.UNAUTHORIZED
+def logout() -> tuple:
+    return (
+        "<h1>Deslogado</h1>",
+        HTTPStatus.UNAUTHORIZED,
+    )
