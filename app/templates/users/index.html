@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}User info{% endblock title %}
+{% block content %}
+<div class="home-container">
+  <h1>User information</h1>
+  <div class="home-post">
+    <h2 class="home-post-titulo">
+      {{user.name}} {{user.last_name}}
+    </h2>
+    <div class="home-post-data">
+      <div>{{user.email}}</div>
+      <div>Faça login na rota /admin/ para acessar seu token</div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
