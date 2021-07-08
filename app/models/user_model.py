@@ -11,6 +11,7 @@ class UserModel(db.Model):
     name: str
     last_name: str
     email: str
+    api_key: str
 
     __tablename__ = "users"
 
