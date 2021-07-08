@@ -2,9 +2,15 @@ from flask import Blueprint, request, render_template, current_app
 from flask_httpauth import HTTPTokenAuth
 from werkzeug.security import generate_password_hash
 from http import HTTPStatus
+from sqlalchemy.exc import IntegrityError
 import secrets
 
+from app.services.helpers import add_commit, delete_commit
+from app.services.users_service import create_user, get_user_token, update_user
+
 from app.models.user_model import UserModel
+
+from app.exc import AllowedKeysError, RequiredKeysError
 
 # -----------------------------------------
 
@@ -15,77 +21,84 @@ auth = HTTPTokenAuth(scheme="Bearer")
 
 
 @auth.verify_token
-def verify_token(token):
-    user: UserModel = UserModel.query.filter_by(api_key=token).first()
+def verify_token(token: str):
+    user: UserModel = get_user_token(token)
     if user:
         return user
 
 
 @bp.get("/signup")
-def form_signup():
+def form_signup() -> tuple:
 
-    return render_template("/users/form.html")
+    return (
+        render_template("/users/form.html"),
+        HTTPStatus.OK,
+    )
 
 
 @bp.post("/signup")
-def user_register():
-    session = current_app.db.session
+def user_register() -> tuple:
 
-    user_request = dict(request.form)
+    try:
+        user: Model = create_user(dict(request.form))
 
-    password = user_request.pop("password")
-    user_request["password_hash"] = generate_password_hash(password)
-    user_request["api_key"] = secrets.token_urlsafe(32)
+        return (
+            render_template("/users/index.html", user=user),
+            HTTPStatus.CREATED,
+        )
 
-    user = UserModel(**user_request)
+    except RequiredKeysError as error:
+        return error.message
 
-    session.add(user)
-    session.commit()
-
-    return render_template("/users/index.html", user=user_request)
+    except IntegrityError as error:
+        return (
+            {"error": f"duplicate key: {error.params['email']}"},
+            HTTPStatus.BAD_REQUEST,
+        )
 
 
 @bp.get("/")
 @auth.login_required
-def get_user():
+def get_user() -> tuple:
 
-    return {"user": auth.current_user()}, HTTPStatus.OK
+    return (
+        {"user": auth.current_user()},
+        HTTPStatus.OK,
+    )
 
 
 @bp.put("/")
 @auth.login_required
-def change_user():
-    session = current_app.db.session
-    allowed_keys = ["name", "last_name", "email", "password"]
+def update() -> tuple:
 
-    payload = request.get_json()
-    for key in payload.keys():
-        if key not in allowed_keys:
-            return {"forbidden_key": key}, HTTPStatus.FORBIDDEN
+    try:
+        user: UserModel = update_user(request.get_json(), auth.current_user())
+        print(user)
 
-    if payload.get("password"):
-        password = payload.pop("password")
-        payload["password_hash"] = generate_password_hash(password)
+        return (
+            {"user": user},
+            HTTPStatus.ACCEPTED,
+        )
 
-    user: UserModel = auth.current_user()
+    except AllowedKeysError as error:
+        return error.message
 
-    for key, value in payload.items():
-        setattr(user, key, value)
-
-    session.add(user)
-    session.commit()
-
-    return {"user": user}, HTTPStatus.ACCEPTED
+    except IntegrityError as error:
+        return (
+            {"error": f"duplicate key: {error.params['email']}"},
+            HTTPStatus.BAD_REQUEST,
+        )
 
 
 @bp.delete("/")
 @auth.login_required
-def delete_user():
-    session = current_app.db.session
+def delete_user() -> tuple:
 
     user: UserModel = auth.current_user()
 
-    session.delete(user)
-    session.commit()
+    delete_commit(user)
 
-    return "No content", HTTPStatus.NO_CONTENT
+    return (
+        "No content",
+        HTTPStatus.NO_CONTENT,
+    )
