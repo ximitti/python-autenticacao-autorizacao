@@ -11,7 +11,6 @@ class UserModel(db.Model):
     name: str
     last_name: str
     email: str
-    api_key: str
 
     __tablename__ = "users"
 
@@ -21,4 +20,3 @@ class UserModel(db.Model):
     last_name = Column(String(511), nullable=False)
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(511), nullable=False)
-    api_key = Column(String(511), nullable=False)
