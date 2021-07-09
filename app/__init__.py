@@ -1,8 +1,6 @@
 from flask import Flask
 from environs import Env
 
-from app.configs import database, migrations
-from app import views
 
 # ---------------------------------
 
@@ -20,7 +18,11 @@ def create_app() -> Flask:
     app.config["JSON_SORT_KEYS"] = False
     app.config["JWT_SECRET_KEY"] = env("JWT_SECRET_KEY")
 
+    from app.configs import database, migrations, token
+    from app import views
+
     database.init_app(app)
+    token.ini_app(app)
     migrations.init_app(app)
     views.init_app(app)
 

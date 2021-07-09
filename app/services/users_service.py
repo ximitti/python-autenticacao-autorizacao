@@ -18,8 +18,6 @@ def create_user(payload: dict) -> UserModel:
     if blank_fields:
         raise RequiredKeysError(payload, blank_fields)
 
-    payload["api_key"] = secrets.token_urlsafe(32)
-
     user: UserModel = UserModel(**payload)
 
     add_commit(user)
@@ -27,9 +25,9 @@ def create_user(payload: dict) -> UserModel:
     return user
 
 
-def get_user_token(token: str) -> UserModel:
+def check_user_credential(email: str, password: str) -> UserModel:
 
-    return UserModel.query.filter_by(api_key=token).first()
+    return UserModel.query.filter_by(email=email, password=password).first()
 
 
 def update_user(payload: dict, user_to_change: UserModel) -> UserModel:
